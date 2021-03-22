@@ -57,6 +57,13 @@ public class NvrSearchService {
         log.info("截图并获取结果");
         String filePath =  nvrControll.capturePicture();
 
+        OkHttpUtil.qrRecognitionByUrl(filePath);
+
+
+
+
+
+
         // 向python发送图片, 获取结果;
         String response = OkHttpUtil.qrRecognition(filePath);
         log.info("识别结果:"+response);
