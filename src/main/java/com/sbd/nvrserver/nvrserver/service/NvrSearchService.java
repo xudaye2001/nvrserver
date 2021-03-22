@@ -4,12 +4,14 @@ import com.sbd.nvrserver.nvrserver.utils.OkHttpUtil;
 import com.sun.jna.NativeLong;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * @Author: 食客
  * @Date: 2021/3/22 3:53 下午
  */
 @Slf4j
+@Service
 public class NvrSearchService {
 
     private NativeLong userId;
@@ -22,6 +24,9 @@ public class NvrSearchService {
      */
     public void initNvr() {
         log.info("初始化球机");
+        if (nvrControll==null) {
+            nvrControll = new NvrControll();
+        }
         if (nvrControll.init()) {
             userId = nvrControll.login();
         }
@@ -36,8 +41,7 @@ public class NvrSearchService {
      */
     public void startSearchQr() {
         log.info("开始搜索标签");
-
-        log.info("");
+        cupPictureAndRecognition();
     }
 
 

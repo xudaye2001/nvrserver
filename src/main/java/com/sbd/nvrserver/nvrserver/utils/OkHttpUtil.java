@@ -15,7 +15,7 @@ public class OkHttpUtil {
 
     public static String qrRecognition(String fileName) {
 
-        String url = "http://127.0.0.1:9999/api/cpr?image_path="+fileName+"&copyright=cbishi.com";
+        String url = "http://192.168.0.7:9999/api/cpr?image_path="+fileName+"&copyright=cbishi.com";
 
         //新建一个OkHttpClient对象
         OkHttpClient client = new OkHttpClient();
