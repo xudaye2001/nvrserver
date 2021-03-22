@@ -20,18 +20,61 @@ public class NvrControll {
     }
 
 
-    public boolean moveLeft(NativeLong userId) {
+    public boolean goTo(NativeLong userId, int index) {
         NativeLong nativeLong = new NativeLong();
         nativeLong.setValue(1);
-        for (int i=0;i<10;i++) {
-            hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,0);
+        boolean isSuccess = hcNetSDK.NET_DVR_PTZPreset_Other(userId,nativeLong,HCNetSDK.GOTO_PRESET,index);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    public boolean zoomInAlive(NativeLong userId) {
+        NativeLong nativeLong = new NativeLong();
+        nativeLong.setValue(1);
+
+//        for (int i=0;i<30;i++) {
+            hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.ZOOM_IN,0,7);
             try {
-                Thread.sleep(100);
+                Thread.sleep(4000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,1,7);
+        try {
+            Thread.sleep(3500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+//        }
+        return true;
+    }
+
+
+    public boolean zoomIn(NativeLong userId) {
+        NativeLong nativeLong = new NativeLong();
+        nativeLong.setValue(1);
+
+
+        for (int i=0;i<4;i++) {
+            hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.ZOOM_IN,0);
+            try {
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,1);
+
+            try { Thread.sleep(4000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+
+
         return true;
     }
 
