@@ -5,10 +5,40 @@ import com.sun.jna.Pointer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.util.UUID;
+
 @Service
 @Slf4j
 public class NvrControll {
     private HCNetSDK hcNetSDK;
+    private NativeLong userId;
+
+
+    public String capturePicture(   ) {
+
+        // 临时文件名
+        String filePath = "/Users/xxf/Documents/SBD/球机/NvrServer" + UUID.randomUUID() + ".jpeg";
+        //抓图配置
+        HCNetSDK.NET_DVR_JPEGPARA lpJpegPara = new HCNetSDK.NET_DVR_JPEGPARA();
+
+        // 0=CIF, 1=QCIF, 2=D1 3=UXGA(1600x1200), 4=SVGA(800x600), 5=HD720p(1280x720),6=VGA
+        lpJpegPara.wPicSize = 255;
+
+        // 图片质量系数 0-最好 1-较好 2-一般
+        lpJpegPara.wPicQuality = 2;
+
+        boolean result = hcNetSDK
+                .NET_DVR_CaptureJPEGPicture(userId, new NativeLong(1), lpJpegPara,
+                        filePath);
+        if (result) {
+            return filePath;
+        }else {
+            return "";
+        }
+    }
+
+
 
 
 
@@ -31,6 +61,22 @@ public class NvrControll {
         }
         return true;
     }
+
+    /**
+     * 回到1号预置点
+     * @param userId id
+     * @return f
+     */
+    public boolean goToMainView(NativeLong userId) {
+        NativeLong nativeLong = new NativeLong();
+        nativeLong.setValue(1);
+        boolean isSuccess = hcNetSDK.NET_DVR_PTZPreset_Other(userId,nativeLong,HCNetSDK.GOTO_PRESET,1);
+        return true;
+    }
+
+
+
+
 
     public boolean zoomInAlive(NativeLong userId) {
         NativeLong nativeLong = new NativeLong();
@@ -108,7 +154,8 @@ public class NvrControll {
      */
     public NativeLong login() {
         // login
-        return hcNetSDK.NET_DVR_Login("192.168.0.26", (short) 8000,"admin","hk123456",new HCNetSDK.NET_DVR_DEVICEINFO());
+        userId = hcNetSDK.NET_DVR_Login("192.168.0.26", (short) 8000,"admin","hk123456",new HCNetSDK.NET_DVR_DEVICEINFO());
+        return userId;
     }
 
 
