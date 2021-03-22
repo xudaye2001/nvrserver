@@ -18,7 +18,7 @@ public class NvrControll {
     public String capturePicture(   ) {
 
         // 临时文件名
-        String filePath = "/Users/xxf/Documents/SBD/球机/NvrServer" + UUID.randomUUID() + ".jpeg";
+        String filePath = "/home/sbd/IdeaProjects/nvrserver" + UUID.randomUUID() + ".jpeg";
         //抓图配置
         HCNetSDK.NET_DVR_JPEGPARA lpJpegPara = new HCNetSDK.NET_DVR_JPEGPARA();
 

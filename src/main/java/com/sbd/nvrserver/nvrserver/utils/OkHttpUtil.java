@@ -5,6 +5,7 @@ import okhttp3.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * @Author: 食客
@@ -35,30 +36,62 @@ public class OkHttpUtil {
             return null;
     }
 
-    public static void qrRecognitionByUrl(String fileName) {
+
+//    public static String qrRecognitionByUrl(String url) {
+//
+//        //新建一个OkHttpClient对象
+//        OkHttpClient client = new OkHttpClient();
+//
+//        Request request = new Request.Builder()
+//                .url(url)
+//                .get()
+//                .build();
+//        //获取响应并把响应体返回
+//        try (Response response = client.newCall(request).execute()) {
+//            assert response.body() != null;
+//            return response.body().string();
+//        }catch (RuntimeException | IOException e) {
+//            e.getMessage();
+//        }
+//        return null;
+//    }
+
+    public static String upDateFile(String fileName) {
+        final String[] st = new String[1];
         File file = new File(fileName);
-        MediaType mediaType = MediaType.parse("text/x-markdown; charset=utf-8");
-        OkHttpClient okHttpClient = new OkHttpClient();
+
+        OkHttpClient client = new OkHttpClient();
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", fileName,
+                        RequestBody.create(MediaType.parse("multipart/form-data"), new File(fileName)))
+                .build();
 
         Request request = new Request.Builder()
-                .url("192.168.0.7:8004/files/upload")
-                .post(RequestBody.create(mediaType, file))
+//                .header("Authorization", "Client-ID " + UUID.randomUUID())
+                .url("http://192.168.0.7:8004/files/upload")
+                .post(requestBody)
                 .build();
-        okHttpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                log.info("onFailure: " + e.getMessage());
-            }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                log.info(response.protocol() + " " +response.code() + " " + response.message());
-                Headers headers = response.headers();
-                for (int i = 0; i < headers.size(); i++) {
-                    log.info( headers.name(i) + ":" + headers.value(i));
-                }
-                log.info( "onResponse: " + response.body().string());
-            }
-        });
+        Response response = null;
+        try {
+            response = client.newCall(request).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        assert response != null;
+        if (!response.isSuccessful()) try {
+            throw new IOException("Unexpected code " + response);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            return response.body().string();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
+
 }

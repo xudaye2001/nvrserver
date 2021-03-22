@@ -1,5 +1,6 @@
 package com.sbd.nvrserver.nvrserver.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.sbd.nvrserver.nvrserver.utils.OkHttpUtil;
 import com.sun.jna.NativeLong;
 import lombok.extern.slf4j.Slf4j;
@@ -57,16 +58,18 @@ public class NvrSearchService {
         log.info("截图并获取结果");
         String filePath =  nvrControll.capturePicture();
 
-        OkHttpUtil.qrRecognitionByUrl(filePath);
+        String response = OkHttpUtil.upDateFile(filePath);
 
-
-
-
-
+//        OkHttpUtil.qrRecognition(response);
+        log.info(response);
 
         // 向python发送图片, 获取结果;
-        String response = OkHttpUtil.qrRecognition(filePath);
-        log.info("识别结果:"+response);
+//        String responseDate = OkHttpUtil.qrRecognition(filePath);
+        JSONObject responseDateJSON = JSONObject.parseObject(response);
+        String id = responseDateJSON.getString("data");
+        String url = "http://192.168.0.7:8004/files/view/"+id;
+        String data = OkHttpUtil.qrRecognition(url);
+        log.info("识别结果:"+data);
     }
 
 
