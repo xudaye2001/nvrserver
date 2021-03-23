@@ -91,14 +91,15 @@ public class NvrSearchService {
     private void processByPool() {
         while (result.size()<4) {
             // 居中
-            d
+            getOffset();
+            cupPictureAndRecognition();
         }
     }
 
     /**
      * 通过返回值获取偏移值
      */
-    private void getOffset(List<Map<String,String>> result) {
+    private void getOffset() {
         int imageCenter = 860;
         // 中心范围
         int centerArea = 200;
