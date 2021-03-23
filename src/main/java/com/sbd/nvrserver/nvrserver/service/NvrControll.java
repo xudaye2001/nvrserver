@@ -15,6 +15,20 @@ public class NvrControll {
     private NativeLong userId;
 
 
+    /**
+     * 调整焦距
+     */
+    public void changeFocus(int time) {
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,new NativeLong(1),HCNetSDK.FOCUS_FAR,1,4);
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,new NativeLong(1),HCNetSDK.FOCUS_FAR,1,4);
+    }
+
+
     public String capturePicture(   ) {
 
         String fileName = UUID.randomUUID().toString();

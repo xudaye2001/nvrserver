@@ -2,16 +2,20 @@ package com.sbd.nvrserver.nvrserver.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.sbd.nvrserver.nvrserver.cocurrent.CallbackTask;
+import com.sbd.nvrserver.nvrserver.cocurrent.CallbackTaskScheduler;
 import com.sbd.nvrserver.nvrserver.utils.OkHttpUtil;
 import com.sun.jna.NativeLong;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.PortInUseException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
 
 /**
@@ -24,7 +28,7 @@ public class NvrSearchService {
 
     private NativeLong userId;
 
-    List<Map<String,String>> result= new ArrayList<>();
+    CopyOnWriteArraySet<Map<String,String>> result= new CopyOnWriteArraySet<>();
 
     private int times;
 
@@ -49,6 +53,9 @@ public class NvrSearchService {
     }
 
 
+
+
+
     /**
      * 开始搜索标签
      */
@@ -64,16 +71,16 @@ public class NvrSearchService {
                 }
         }
         // go to far
+        getOffset();
         nvrControll.zoomOut(userId,3000);
         waitForMoving();
-        getOffset();
         result.clear();
         while (result.size()!=4) {
             if (result.size()==0) {
-                nvrControll.zoomIn(userId,300);
+                nvrControll.zoomIn(userId,500);
             }
             getOffset();
-            processByPool();
+            processByPoolSycn();
         }
         log.info("牛逼 识别出了4个");
         log.info(result.toString());
@@ -96,14 +103,71 @@ public class NvrSearchService {
     /**
      * 对<4个标签的处理
      */
-    private void processByPool() {
-//        while (result.size()<4) {
-            // 居中
-//            getOffset();
-            cupPictureAndRecognition();
-//            break;
-//        }
+    private void processByPoolSycn() {
+        cupPictureAndRecognition();
+        result.clear();
+        // 不同焦点识别
+        for (int i=0;i<10;i++) {
+            nvrControll.changeFocus(100);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            cutpictureSync();
+        }
     }
+
+
+
+    /**
+     * 对<4个标签的处理
+     */
+    private void processByPool() {
+        cupPictureAndRecognition();
+        result.clear();
+        // 不同焦点识别
+        for (int i=0;i<10;i++) {
+            nvrControll.changeFocus(100);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            cutpictureSync();
+        }
+    }
+
+
+    /**
+     * 线程池截图
+     */
+    private void cutpictureSync() {
+        CallbackTaskScheduler.add(new CallbackTask<Boolean>() {
+
+            @Override
+            public Boolean execute() throws PortInUseException {
+                cupPictureAndRecognition();
+                return true;
+            }
+
+            @Override
+            public void onBack(Boolean aBoolean) {
+                if (aBoolean) {
+                    log.info("成功");
+                }else {
+                    log.info("失败");
+                }
+            }
+
+            @Override
+            public void onException(Throwable t) {
+                log.error("报错:"+t.getMessage());
+            }
+        });
+    }
+
+
 
     /**
      * 通过返回值获取偏移值
@@ -225,7 +289,7 @@ public class NvrSearchService {
             if (jsonArray==null||jsonArray.size()==0) {
                 return new ArrayList<>();
             }
-            result.clear();
+
             jsonArray.stream().forEach(pb -> {
                 Map<String, String> rightMap = (Map<String, String>) pb;
                 result.add(rightMap);
@@ -236,6 +300,57 @@ public class NvrSearchService {
 
 
     }
+
+
+    /**
+     * 截图并获取识别结果
+     */
+    private List<String> cupPictureAndRecognitionSycn() {
+        // 等待对焦
+        // 截取图片
+        log.info("截图并获取结果");
+        String fileNmae =  nvrControll.capturePicture();
+
+        String response = OkHttpUtil.upDateFile(fileNmae);
+
+        log.info(response);
+
+        // 向python发送图片, 获取结果;
+        JSONObject responseDateJSON = JSONObject.parseObject(response);
+        String id = responseDateJSON.getString("data");
+        String url = "http://192.168.0.7:8004/files/view/"+id;
+        String data = OkHttpUtil.qrRecognition(url);
+        log.info("识别结果:"+data);
+        List<String> dataList = new ArrayList<>();
+        if (data==null||"".equals(data)) {
+            return dataList;
+        }else {
+            JSONObject responseData = JSONObject.parseObject(data);
+            JSONArray jsonArray = responseData.getJSONArray("data");
+            if (jsonArray==null||jsonArray.size()==0) {
+                return new ArrayList<>();
+            }
+
+            jsonArray.stream().forEach(pb -> {
+                Map<String, String> rightMap = (Map<String, String>) pb;
+                result.add(rightMap);
+            });
+            log.info(dataList.toString());
+            return dataList;
+        }
+    }
+
+
+
+
+//    /**
+//     * 更新数据
+//     */
+//    private void updateResult(Map<String,String> data) {
+//        for (Map<String,String> resultCurrent:result) {
+//            if (data.get("value").equals(resultCurrent.get("value")))
+//        }
+//    }
 
 
 
