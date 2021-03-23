@@ -28,6 +28,20 @@ public class NvrControll {
         hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,new NativeLong(1),HCNetSDK.FOCUS_FAR,1,4);
     }
 
+    /**
+     * focus to main
+     * @return
+     */
+    public void focusToMain() {
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,new NativeLong(1),HCNetSDK.FOCUS_NEAR,1,4);
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,new NativeLong(1),HCNetSDK.FOCUS_NEAR,1,4);
+    }
+
 
     public String capturePicture(   ) {
 

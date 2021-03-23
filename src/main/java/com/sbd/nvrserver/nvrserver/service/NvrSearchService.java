@@ -28,9 +28,13 @@ public class NvrSearchService {
 
     private NativeLong userId;
 
-    CopyOnWriteArraySet<Map<String,String>> result= new CopyOnWriteArraySet<>();
+//    public static Set<Map<String,String>> result= new HashSet<>();
+
+    public static Map<String,Map<String,String>> results = new HashMap<>();
 
     private int times;
+    private int doTimes;
+
 
     @Autowired
     private NvrControll nvrControll;
@@ -49,7 +53,11 @@ public class NvrSearchService {
 
         // 回到主视图
        goToMainView();
-        waitForMoving();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -61,10 +69,10 @@ public class NvrSearchService {
      */
     public void startSearchQr() {
         log.info("开始搜索标签");
-        cupPictureAndRecognition();
+        String fileName =  nvrControll.capturePicture();
+        cupPictureAndRecognitionSycn(fileName);;
 
-
-        while (result.size()==0) {
+        while (results.size()==0) {
                 if (times<3) {
                     processByZero();
                     times++;
@@ -74,16 +82,16 @@ public class NvrSearchService {
         getOffset();
         nvrControll.zoomOut(userId,3000);
         waitForMoving();
-        result.clear();
-        while (result.size()!=4) {
-            if (result.size()==0) {
-                nvrControll.zoomIn(userId,500);
+        results.clear();
+        while (results.size()<4) {
+            if (results.size()==0) {
+                nvrControll.zoomIn(userId,300);
             }
             getOffset();
             processByPoolSycn();
         }
         log.info("牛逼 识别出了4个");
-        log.info(result.toString());
+        log.info(results.toString());
 
     }
 
@@ -93,10 +101,10 @@ public class NvrSearchService {
     private void processByZero() {
 
         // 截图
-        while (result.size()==0) {
+        while (results.size()==0) {
             // 推进一秒
-            nvrControll.zoomIn(userId,500);
-            cupPictureAndRecognition().size();
+            nvrControll.zoomIn(userId,1000);
+            processByPoolSycn();
         }
     }
 
@@ -104,50 +112,46 @@ public class NvrSearchService {
      * 对<4个标签的处理
      */
     private void processByPoolSycn() {
-        cupPictureAndRecognition();
-        result.clear();
+//        cupPictureAndRecognition();
+        results.clear();
         // 不同焦点识别
-        for (int i=0;i<10;i++) {
-            nvrControll.changeFocus(100);
+        times=40;
+        doTimes=40;
+        for (int i=0;i<times;i++) {
+            nvrControll.changeFocus(50);
+            String fileName =  nvrControll.capturePicture();
+            cutpictureSync(fileName);
+        }
+
+        while (doTimes>0) {
             try {
-                Thread.sleep(100);
+                Thread.sleep(1000);
+                log.info("wait for result");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            cutpictureSync();
         }
+
     }
 
 
-
-    /**
-     * 对<4个标签的处理
-     */
-    private void processByPool() {
-        cupPictureAndRecognition();
-        result.clear();
-        // 不同焦点识别
-        for (int i=0;i<10;i++) {
-            nvrControll.changeFocus(100);
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            cutpictureSync();
-        }
-    }
 
 
     /**
      * 线程池截图
      */
-    private void cutpictureSync() {
+    private void cutpictureSync(String fileName) {
         CallbackTaskScheduler.add(new CallbackTask<Boolean>() {
 
             @Override
             public Boolean execute() throws PortInUseException {
-                cupPictureAndRecognition();
+                try {
+                    cupPictureAndRecognitionSycn(fileName);
+                }catch (Exception e) {
+                    log.error(e.getMessage());
+                }finally {
+                    doTimes--;
+                }
                 return true;
             }
 
@@ -177,7 +181,7 @@ public class NvrSearchService {
         int imageCenterY = 540;
         // 中心范围
         int centerAreaX = 200;
-        int centerAreaY = 120;
+        int centerAreaY = 80;
         // 最小x
         int xMin=1920;
         int xMax=0;
@@ -186,9 +190,12 @@ public class NvrSearchService {
         int yMax = 0;
 
         // 获取二维码的x范围
-        for (Map<String,String> map:result) {
-            int x = Integer.parseInt(map.get("x"));
-            int y = Integer.parseInt(map.get("y"));
+
+
+        for (Map.Entry<String,Map<String,String>> map:results.entrySet()) {
+            log.info("process:"+map.getKey());
+            int x = Integer.parseInt(results.get(map.getKey()).get("x"));
+            int y = Integer.parseInt(results.get(map.getKey()).get("y"));
             if (x<xMin) {
                 xMin = x;
             }
@@ -245,99 +252,57 @@ public class NvrSearchService {
             }
         }
 
-
         if (xMin>200&&xMax<1720 && yMin>90&&yMax<880) {
-            nvrControll.zoomIn(userId,200);
+            nvrControll.zoomIn(userId,300);
         }
-
-
-
-
-    }
-
-
-
-
-
-    /**
-     * 截图并获取识别结果
-     */
-    private List<String> cupPictureAndRecognition() {
-        // 等待对焦
-        waitForFocuce();
-
-        // 截取图片
-        log.info("截图并获取结果");
-        String fileNmae =  nvrControll.capturePicture();
-
-        String response = OkHttpUtil.upDateFile(fileNmae);
-
-        log.info(response);
-
-        // 向python发送图片, 获取结果;
-        JSONObject responseDateJSON = JSONObject.parseObject(response);
-        String id = responseDateJSON.getString("data");
-        String url = "http://192.168.0.7:8004/files/view/"+id;
-        String data = OkHttpUtil.qrRecognition(url);
-        log.info("识别结果:"+data);
-        List<String> dataList = new ArrayList<>();
-        if (data==null||"".equals(data)) {
-            return dataList;
-        }else {
-            JSONObject responseData = JSONObject.parseObject(data);
-            JSONArray jsonArray = responseData.getJSONArray("data");
-            if (jsonArray==null||jsonArray.size()==0) {
-                return new ArrayList<>();
-            }
-
-            jsonArray.stream().forEach(pb -> {
-                Map<String, String> rightMap = (Map<String, String>) pb;
-                result.add(rightMap);
-            });
-            log.info(dataList.toString());
-            return dataList;
-        }
-
-
     }
 
 
     /**
      * 截图并获取识别结果
      */
-    private List<String> cupPictureAndRecognitionSycn() {
+    private JSONArray cupPictureAndRecognitionSycn(String fileNmae) {
         // 等待对焦
         // 截取图片
-        log.info("截图并获取结果");
-        String fileNmae =  nvrControll.capturePicture();
+//        log.info("截图并获取结果");
+
 
         String response = OkHttpUtil.upDateFile(fileNmae);
 
-        log.info(response);
+//        log.info(response);
 
         // 向python发送图片, 获取结果;
         JSONObject responseDateJSON = JSONObject.parseObject(response);
         String id = responseDateJSON.getString("data");
         String url = "http://192.168.0.7:8004/files/view/"+id;
         String data = OkHttpUtil.qrRecognition(url);
-        log.info("识别结果:"+data);
+//        log.info("识别结果:"+data);
         List<String> dataList = new ArrayList<>();
         if (data==null||"".equals(data)) {
-            return dataList;
+            return new JSONArray();
         }else {
             JSONObject responseData = JSONObject.parseObject(data);
             JSONArray jsonArray = responseData.getJSONArray("data");
             if (jsonArray==null||jsonArray.size()==0) {
-                return new ArrayList<>();
+                return new JSONArray();
             }
 
-            jsonArray.stream().forEach(pb -> {
-                Map<String, String> rightMap = (Map<String, String>) pb;
-                result.add(rightMap);
-            });
-            log.info(dataList.toString());
-            return dataList;
+            update(jsonArray);
+
+            return jsonArray;
         }
+    }
+
+    private synchronized void update(JSONArray jsonArray) {
+        jsonArray.stream().forEach(pb -> {
+            Map<String, String> rightMap = (Map<String, String>) pb;
+            Map<String,String> location = new HashMap<>();
+            location.put("x",rightMap.get("x"));
+            location.put("y",rightMap.get("y"));
+            results.put(rightMap.get("value"),location);
+//            result.add(rightMap);
+        });
+        log.info("resultSize:"+results.size());
     }
 
 
