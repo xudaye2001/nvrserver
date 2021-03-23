@@ -17,8 +17,9 @@ public class NvrControll {
 
     public String capturePicture(   ) {
 
+        String fileName = UUID.randomUUID().toString();
         // 临时文件名
-        String filePath = "/home/sbd/IdeaProjects/nvrserver" + UUID.randomUUID() + ".jpeg";
+        String filePath = "/home/sbd/IdeaProjects/nvrserver/" + fileName + ".jpeg";
         //抓图配置
         HCNetSDK.NET_DVR_JPEGPARA lpJpegPara = new HCNetSDK.NET_DVR_JPEGPARA();
 
@@ -32,7 +33,7 @@ public class NvrControll {
                 .NET_DVR_CaptureJPEGPicture(userId, new NativeLong(1), lpJpegPara,
                         filePath);
         if (result) {
-            return filePath;
+            return fileName;
         }else {
             return "";
         }
@@ -90,11 +91,7 @@ public class NvrControll {
                 e.printStackTrace();
             }
             hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,1,7);
-        try {
-            Thread.sleep(3500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
 //        }
         return true;
     }

@@ -6,6 +6,7 @@ import okhttp3.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @Author: 食客
@@ -57,14 +58,14 @@ public class OkHttpUtil {
 //    }
 
     public static String upDateFile(String fileName) {
-        final String[] st = new String[1];
-        File file = new File(fileName);
+        String filePath = "/home/sbd/IdeaProjects/nvrserver/"+fileName+".jpeg";
+        File file = new File(filePath);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", fileName,
-                        RequestBody.create(MediaType.parse("multipart/form-data"), new File(fileName)))
+                .addFormDataPart("file", fileName+".jpeg",
+                        RequestBody.create(MediaType.parse("multipart/form-data"), file))
                 .build();
 
         Request request = new Request.Builder()
@@ -73,6 +74,7 @@ public class OkHttpUtil {
                 .post(requestBody)
                 .build();
 
+
         Response response = null;
         try {
             response = client.newCall(request).execute();
@@ -80,6 +82,7 @@ public class OkHttpUtil {
             e.printStackTrace();
         }
         assert response != null;
+        file.delete();
         if (!response.isSuccessful()) try {
             throw new IOException("Unexpected code " + response);
         } catch (IOException e) {

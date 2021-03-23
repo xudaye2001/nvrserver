@@ -1,11 +1,16 @@
 package com.sbd.nvrserver.nvrserver.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.sbd.nvrserver.nvrserver.utils.OkHttpUtil;
 import com.sun.jna.NativeLong;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author: 食客
@@ -34,6 +39,7 @@ public class NvrSearchService {
 
         // 回到主视图
         goToMainView();
+        waitForMoving();
     }
 
 
@@ -42,23 +48,42 @@ public class NvrSearchService {
      */
     public void startSearchQr() {
         log.info("开始搜索标签");
-        cupPictureAndRecognition();
+        List<String> result =  cupPictureAndRecognition();
+
+        int size = result.size();
+        switch (size) {
+            case 0:
+                // todo
+                // move in
+            case 4:
+                // todo
+            default:
+                // todo
+                // computed center
+                // moving in center
+
+        }
+
     }
+
+
 
 
     /**
      * 截图并获取识别结果
      */
-    private void cupPictureAndRecognition() {
+    private List<String> cupPictureAndRecognition() {
+        // zoom in
+        nvrControll.zoomInAlive(userId);
 
         // 等待对焦
         waitForFocuce();
 
         // 截取图片
         log.info("截图并获取结果");
-        String filePath =  nvrControll.capturePicture();
+        String fileNmae =  nvrControll.capturePicture();
 
-        String response = OkHttpUtil.upDateFile(filePath);
+        String response = OkHttpUtil.upDateFile(fileNmae);
 
 //        OkHttpUtil.qrRecognition(response);
         log.info(response);
@@ -70,6 +95,16 @@ public class NvrSearchService {
         String url = "http://192.168.0.7:8004/files/view/"+id;
         String data = OkHttpUtil.qrRecognition(url);
         log.info("识别结果:"+data);
+        if (data==null||"".equals(data)) {
+
+        }else {
+            JSONObject responseData = JSONObject.parseObject(data);
+            JSONArray jsonArray = responseData.getJSONArray("data");
+            List<String> dataList = jsonArray.toJavaList(String.class);
+            log.info(dataList.toString());
+        }
+
+
     }
 
 
@@ -85,7 +120,14 @@ public class NvrSearchService {
 
 
 
-
+    public void waitForMoving() {
+        log.info("等待moving");
+        try {
+            Thread.sleep(4500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 
