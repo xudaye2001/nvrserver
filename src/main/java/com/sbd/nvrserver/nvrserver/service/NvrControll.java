@@ -98,6 +98,7 @@ public class NvrControll {
 
 
     public boolean zoomIn(NativeLong userId) {
+        log.info("推进一秒");
         NativeLong nativeLong = new NativeLong();
         nativeLong.setValue(1);
 

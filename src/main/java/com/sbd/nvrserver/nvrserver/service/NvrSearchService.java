@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,8 @@ import java.util.stream.Collectors;
 public class NvrSearchService {
 
     private NativeLong userId;
+
+    private int times;
 
     @Autowired
     private NvrControll nvrControll;
@@ -54,17 +57,35 @@ public class NvrSearchService {
         switch (size) {
             case 0:
                 // todo
-                // move in
+                processByZero();
+
             case 4:
                 // todo
+                log.info("获得4个图像");
+                break;
             default:
                 // todo
+                log.info("获得图像");
+                break;
                 // computed center
                 // moving in center
 
         }
 
     }
+
+    /**
+     * 对没有结果返回的处理
+     */
+    private void processByZero() {
+        // 推进一秒
+        nvrControll.zoomIn(userId);
+        // 等待对焦
+        waitForFocuce();
+        // 截图
+        cupPictureAndRecognition();
+    }
+
 
 
 
@@ -73,8 +94,7 @@ public class NvrSearchService {
      * 截图并获取识别结果
      */
     private List<String> cupPictureAndRecognition() {
-        // zoom in
-        nvrControll.zoomInAlive(userId);
+
 
         // 等待对焦
         waitForFocuce();
@@ -85,23 +105,23 @@ public class NvrSearchService {
 
         String response = OkHttpUtil.upDateFile(fileNmae);
 
-//        OkHttpUtil.qrRecognition(response);
         log.info(response);
 
         // 向python发送图片, 获取结果;
-//        String responseDate = OkHttpUtil.qrRecognition(filePath);
         JSONObject responseDateJSON = JSONObject.parseObject(response);
         String id = responseDateJSON.getString("data");
         String url = "http://192.168.0.7:8004/files/view/"+id;
         String data = OkHttpUtil.qrRecognition(url);
         log.info("识别结果:"+data);
+        List<String> dataList = new ArrayList<>();
         if (data==null||"".equals(data)) {
-
+            return dataList;
         }else {
             JSONObject responseData = JSONObject.parseObject(data);
             JSONArray jsonArray = responseData.getJSONArray("data");
-            List<String> dataList = jsonArray.toJavaList(String.class);
+            dataList = jsonArray.toJavaList(String.class);
             log.info(dataList.toString());
+            return dataList;
         }
 
 
