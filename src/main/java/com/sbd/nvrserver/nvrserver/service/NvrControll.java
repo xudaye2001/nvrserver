@@ -50,7 +50,7 @@ public class NvrControll {
         nativeLong.setValue(1);
         hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,0,4);
         try {
-            Thread.sleep(500);
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -68,7 +68,7 @@ public class NvrControll {
         nativeLong.setValue(1);
         hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.PAN_RIGHT,0,4);
         try {
-            Thread.sleep(500);
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -87,7 +87,7 @@ public class NvrControll {
         nativeLong.setValue(1);
         hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.TILT_UP,0,4);
         try {
-            Thread.sleep(500);
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -106,7 +106,7 @@ public class NvrControll {
         nativeLong.setValue(1);
         hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.TILT_DOWN,0,4);
         try {
-            Thread.sleep(500);
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -168,11 +168,27 @@ public class NvrControll {
 
         hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.ZOOM_IN,0);
         try {
-            Thread.sleep(1000L *sec);
+            Thread.sleep( sec);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,1);
+        hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.ZOOM_IN,1);
+
+        return true;
+    }
+
+    public boolean zoomOut(NativeLong userId,int sec) {
+        log.info("推进一秒");
+        NativeLong nativeLong = new NativeLong();
+        nativeLong.setValue(1);
+
+        hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.ZOOM_OUT,0);
+        try {
+            Thread.sleep( sec);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.ZOOM_OUT,1);
 
         return true;
     }

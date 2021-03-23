@@ -24,7 +24,7 @@ public class NvrSearchService {
 
     private NativeLong userId;
 
-    List<Map<String,String>> result;
+    List<Map<String,String>> result= new ArrayList<>();
 
     private int times;
 
@@ -44,7 +44,7 @@ public class NvrSearchService {
         }
 
         // 回到主视图
-        goToMainView();
+       goToMainView();
         waitForMoving();
     }
 
@@ -57,15 +57,23 @@ public class NvrSearchService {
         cupPictureAndRecognition();
 
 
-        while (result.size()!=4) {
-            if (result.size() == 0) {
+        while (result.size()==0) {
                 if (times<3) {
                     processByZero();
                     times++;
                 }
-            } else {
-                processByPool();
+        }
+        // go to far
+        nvrControll.zoomOut(userId,3000);
+        waitForMoving();
+        getOffset();
+        result.clear();
+        while (result.size()!=4) {
+            if (result.size()==0) {
+                nvrControll.zoomIn(userId,300);
             }
+            getOffset();
+            processByPool();
         }
         log.info("牛逼 识别出了4个");
         log.info(result.toString());
@@ -80,7 +88,7 @@ public class NvrSearchService {
         // 截图
         while (result.size()==0) {
             // 推进一秒
-            nvrControll.zoomIn(userId,1);
+            nvrControll.zoomIn(userId,500);
             cupPictureAndRecognition().size();
         }
     }
@@ -89,58 +97,93 @@ public class NvrSearchService {
      * 对<4个标签的处理
      */
     private void processByPool() {
-        while (result.size()<4) {
+//        while (result.size()<4) {
             // 居中
-            getOffset();
+//            getOffset();
             cupPictureAndRecognition();
-        }
+//            break;
+//        }
     }
 
     /**
      * 通过返回值获取偏移值
      */
     private void getOffset() {
-        int imageCenter = 860;
+        int imageCenterX = 860;
+        int imageCenterY = 540;
         // 中心范围
-        int centerArea = 200;
+        int centerAreaX = 200;
+        int centerAreaY = 120;
         // 最小x
-        int xMin=0;
+        int xMin=1920;
         int xMax=0;
+
+        int yMin = 1080;
+        int yMax = 0;
 
         // 获取二维码的x范围
         for (Map<String,String> map:result) {
             int x = Integer.parseInt(map.get("x"));
+            int y = Integer.parseInt(map.get("y"));
             if (x<xMin) {
                 xMin = x;
             }
             if (x>xMax) {
                 xMax= x;
             }
+
+            if (y<yMin) {
+                yMin = y;
+            }
+            if (y>yMax) {
+                yMax= y;
+            }
+
         }
 
         // 计算二维码的中心坐标
-        int currentCenter = (xMax-xMin)/2+xMin;
+        int currentCenterX = (xMax-xMin)/2+xMin;
+        int currentCenterY = (yMax-yMin)/2+yMin;
 
-        // 判断是否需要移动
-
-
-
-        // 判断中心点在画面左右
-        int offsetValue = currentCenter-imageCenter;
-        if (offsetValue>0){
-            if (offsetValue<centerArea) {
+//         判断中心点在画面左右
+        int offsetValueX = currentCenterX-imageCenterX;
+        if (offsetValueX>0){
+            if (offsetValueX<centerAreaX) {
                 log.info("小于偏移值, 不需要移动");
             }else {
                 // 左移
-                nvrControll.goToLeftBySec(userId,500);
+                nvrControll.goToRightBySec(userId,offsetValueX/2);
             }
         }else {
-            if (-offsetValue<centerArea) {
+            if (-offsetValueX<centerAreaX) {
                 log.info("小于偏移值, 不需要移动");
             }else {
                 // 右移
-                nvrControll.goToRightBySec(userId,500);
+                nvrControll.goToLeftBySec(userId,-offsetValueX/2);
             }
+        }
+
+        // y
+        int offsetValueY = currentCenterY-imageCenterY;
+        if (offsetValueY>0){
+            if (offsetValueY<centerAreaY) {
+                log.info("小于偏移值, 不需要移动");
+            }else {
+                // 左移
+                nvrControll.goToDownBySec(userId,offsetValueY/3);
+            }
+        }else {
+            if (-offsetValueY<centerAreaY) {
+                log.info("小于偏移值, 不需要移动");
+            }else {
+                // 右移
+                nvrControll.goToTopBySec(userId,-offsetValueY/3);
+            }
+        }
+
+
+        if (xMin>200&&xMax<1720 && yMin>90&&yMax<880) {
+            nvrControll.zoomIn(userId,200);
         }
 
 
@@ -180,8 +223,9 @@ public class NvrSearchService {
             JSONObject responseData = JSONObject.parseObject(data);
             JSONArray jsonArray = responseData.getJSONArray("data");
             if (jsonArray==null||jsonArray.size()==0) {
-                return dataList;
+                return new ArrayList<>();
             }
+            result.clear();
             jsonArray.stream().forEach(pb -> {
                 Map<String, String> rightMap = (Map<String, String>) pb;
                 result.add(rightMap);
@@ -223,7 +267,7 @@ public class NvrSearchService {
     public void waitForFocuce() {
         log.info("等待对焦");
         try {
-            Thread.sleep(3500);
+            Thread.sleep(4500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
