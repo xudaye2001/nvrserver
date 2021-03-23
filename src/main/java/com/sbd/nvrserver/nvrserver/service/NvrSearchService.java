@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -23,7 +24,7 @@ public class NvrSearchService {
 
     private NativeLong userId;
 
-    int size;
+    List<Map<String,String>> result;
 
     private int times;
 
@@ -53,16 +54,21 @@ public class NvrSearchService {
      */
     public void startSearchQr() {
         log.info("开始搜索标签");
-        List<String> result =  cupPictureAndRecognition();
+        cupPictureAndRecognition();
 
-         size= result.size();
-        if (size==0) {
-            processByZero();
-        }else if (size==4) {
-            log.info("4ge");
-        }else {
-            log.info("data");
+
+        while (result.size()!=4) {
+            if (result.size() == 0) {
+                if (times<3) {
+                    processByZero();
+                    times++;
+                }
+            } else {
+                processByPool();
+            }
         }
+        log.info("牛逼 识别出了4个");
+        log.info(result.toString());
 
     }
 
@@ -72,11 +78,73 @@ public class NvrSearchService {
     private void processByZero() {
 
         // 截图
-        while (size==0) {
+        while (result.size()==0) {
             // 推进一秒
             nvrControll.zoomIn(userId,1);
-            size = cupPictureAndRecognition().size();
+            cupPictureAndRecognition().size();
         }
+    }
+
+    /**
+     * 对<4个标签的处理
+     */
+    private void processByPool() {
+        while (result.size()<4) {
+            // 居中
+            d
+        }
+    }
+
+    /**
+     * 通过返回值获取偏移值
+     */
+    private void getOffset(List<Map<String,String>> result) {
+        int imageCenter = 860;
+        // 中心范围
+        int centerArea = 200;
+        // 最小x
+        int xMin=0;
+        int xMax=0;
+
+        // 获取二维码的x范围
+        for (Map<String,String> map:result) {
+            int x = Integer.parseInt(map.get("x"));
+            if (x<xMin) {
+                xMin = x;
+            }
+            if (x>xMax) {
+                xMax= x;
+            }
+        }
+
+        // 计算二维码的中心坐标
+        int currentCenter = (xMax-xMin)/2+xMin;
+
+        // 判断是否需要移动
+
+
+
+        // 判断中心点在画面左右
+        int offsetValue = currentCenter-imageCenter;
+        if (offsetValue>0){
+            if (offsetValue<centerArea) {
+                log.info("小于偏移值, 不需要移动");
+            }else {
+                // 左移
+                nvrControll.goToLeftBySec(userId,500);
+            }
+        }else {
+            if (-offsetValue<centerArea) {
+                log.info("小于偏移值, 不需要移动");
+            }else {
+                // 右移
+                nvrControll.goToRightBySec(userId,500);
+            }
+        }
+
+
+
+
     }
 
 
@@ -113,7 +181,10 @@ public class NvrSearchService {
             if (jsonArray==null||jsonArray.size()==0) {
                 return dataList;
             }
-            dataList = jsonArray.toJavaList(String.class);
+            jsonArray.stream().forEach(pb -> {
+                Map<String, String> rightMap = (Map<String, String>) pb;
+                result.add(rightMap);
+            });
             log.info(dataList.toString());
             return dataList;
         }

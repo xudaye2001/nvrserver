@@ -40,13 +40,77 @@ public class NvrControll {
     }
 
 
-
-
-
-    public boolean controller(NativeLong userId) {
+    /**
+     * 左移xx毫秒
+     * @param userId 登录id
+     * @param millis 时间
+     */
+    public boolean goToLeftBySec(NativeLong userId,int millis) {
         NativeLong nativeLong = new NativeLong();
         nativeLong.setValue(1);
-        hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,0);
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,0,4);
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,1,4);
+        return true;
+    }
+
+    /**
+     * 右移xx毫秒
+     * @param userId 登录id
+     * @param millis 时间
+     */
+    public boolean goToRightBySec(NativeLong userId,int millis) {
+        NativeLong nativeLong = new NativeLong();
+        nativeLong.setValue(1);
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.PAN_RIGHT,0,4);
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.PAN_RIGHT,1,4);
+        return true;
+    }
+
+
+    /**
+     * 上移xx毫秒
+     * @param userId 登录id
+     * @param millis 时间
+     */
+    public boolean goToTopBySec(NativeLong userId,int millis) {
+        NativeLong nativeLong = new NativeLong();
+        nativeLong.setValue(1);
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.TILT_UP,0,4);
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.TILT_UP,1,4);
+        return true;
+    }
+
+
+    /**
+     * 上移xx毫秒
+     * @param userId 登录id
+     * @param millis 时间
+     */
+    public boolean goToDownBySec(NativeLong userId,int millis) {
+        NativeLong nativeLong = new NativeLong();
+        nativeLong.setValue(1);
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.TILT_DOWN,0,4);
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        hcNetSDK.NET_DVR_PTZControlWithSpeed_Other(userId,nativeLong,HCNetSDK.TILT_DOWN,1,4);
         return true;
     }
 
