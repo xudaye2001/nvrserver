@@ -97,27 +97,18 @@ public class NvrControll {
     }
 
 
-    public boolean zoomIn(NativeLong userId) {
+    public boolean zoomIn(NativeLong userId,int sec) {
         log.info("推进一秒");
         NativeLong nativeLong = new NativeLong();
         nativeLong.setValue(1);
 
-
-        for (int i=0;i<4;i++) {
-            hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.ZOOM_IN,0);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,1);
-
-            try { Thread.sleep(4000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.ZOOM_IN,0);
+        try {
+            Thread.sleep(1000L *sec);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
+        hcNetSDK.NET_DVR_PTZControl_Other(userId,nativeLong,HCNetSDK.PAN_LEFT,1);
 
         return true;
     }

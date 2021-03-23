@@ -23,6 +23,8 @@ public class NvrSearchService {
 
     private NativeLong userId;
 
+    int size;
+
     private int times;
 
     @Autowired
@@ -53,23 +55,13 @@ public class NvrSearchService {
         log.info("开始搜索标签");
         List<String> result =  cupPictureAndRecognition();
 
-        int size = result.size();
-        switch (size) {
-            case 0:
-                // todo
-                processByZero();
-
-            case 4:
-                // todo
-                log.info("获得4个图像");
-                break;
-            default:
-                // todo
-                log.info("获得图像");
-                break;
-                // computed center
-                // moving in center
-
+         size= result.size();
+        if (size==0) {
+            processByZero();
+        }else if (size==4) {
+            log.info("4ge");
+        }else {
+            log.info("data");
         }
 
     }
@@ -78,12 +70,13 @@ public class NvrSearchService {
      * 对没有结果返回的处理
      */
     private void processByZero() {
-        // 推进一秒
-        nvrControll.zoomIn(userId);
-        // 等待对焦
-        waitForFocuce();
+
         // 截图
-        cupPictureAndRecognition();
+        while (size==0) {
+            // 推进一秒
+            nvrControll.zoomIn(userId,1);
+            size = cupPictureAndRecognition().size();
+        }
     }
 
 
@@ -94,8 +87,6 @@ public class NvrSearchService {
      * 截图并获取识别结果
      */
     private List<String> cupPictureAndRecognition() {
-
-
         // 等待对焦
         waitForFocuce();
 
@@ -119,6 +110,9 @@ public class NvrSearchService {
         }else {
             JSONObject responseData = JSONObject.parseObject(data);
             JSONArray jsonArray = responseData.getJSONArray("data");
+            if (jsonArray==null||jsonArray.size()==0) {
+                return dataList;
+            }
             dataList = jsonArray.toJavaList(String.class);
             log.info(dataList.toString());
             return dataList;

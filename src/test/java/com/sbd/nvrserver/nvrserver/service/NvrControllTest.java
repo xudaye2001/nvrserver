@@ -23,11 +23,11 @@ class NvrControllTest {
     void testOne() {
 
         nvrControll.goTo(userId,1);
-        nvrControll.zoomIn(userId);
+        nvrControll.zoomIn(userId,1);
         nvrControll.goTo(userId,5);
 
         nvrControll.goTo(userId,2);
-        nvrControll.zoomIn(userId);
+        nvrControll.zoomIn(userId,1);
         nvrControll.goTo(userId,5);
 
         nvrControll.goTo(userId,1);
@@ -46,8 +46,6 @@ class NvrControllTest {
         nvrControll.goTo(userId,5);
 
 //        nvrControll.goTo(userId,1);
-
-
     }
 
     @AfterEach
